@@ -964,6 +964,29 @@ class Ghost(object):
             'Can\'t find "%s" in current frame' % text)
         return True, self._release_last_resources()
 
+    def wait_for_js(self, script):
+        """Waits until JS evaluates `script` content into non-false.
+
+        :param script: The script for evaluation. Should not affect JS state.
+        """
+        err_msg = 'Can\'t evaluate "%s" to true' % script
+        js_eval_result = None
+
+        def check_js_evaluation():
+            """
+            Evaluates script content in JS and extracts result into local var if any.
+
+            :return: evaluation result
+            """
+            js_eval_result, _resources = self.evaluate(script)
+            return js_eval_result
+
+        self.wait_for(check_js_evaluation, err_msg)
+        return js_eval_result, self._release_last_resources()
+
+    def evaluate_angular_scope(self, element_id, script):
+        return self.evaluate("angular.element(document.getElementById('%s')).scope().%s;" % (element_id, script))
+
     def _authenticate(self, mix, authenticator):
         """Called back on basic / proxy http auth.
 
